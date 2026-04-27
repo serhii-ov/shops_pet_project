@@ -1,0 +1,94 @@
+🧪 4. Testing Strategy (Real-world)
+Forget theory—this is how you should test this system.
+
+✅ A. Unit Tests (core logic)
+1. User creation
+def test_create_user():    
+    user = User.objects.create_user(      
+        email="test@test.com",        
+        password="123456",   
+        )    
+        assert user.check_password("123456")
+
+2. Profile auto handling
+def test_profile_created():    
+    user = User.objects.create_user(
+        email="a@test.com", 
+        password="123",
+        )    
+        Profile.objects.create(user=user)    
+        assert user.profile is not None
+
+3. Group assignment
+def test_default_group():    
+    user = User.objects.create_user(
+        email="a@test.com", 
+        password="123",
+        )    
+        assert user.groups.filter(name="Customer").exists()
+
+✅ B. API Tests (critical)
+Use DRF test client.
+
+1. Register user
+def test_create_user_api(client):    
+    response = client.post(
+        "/users/", 
+        {"email": "a@test.com",        
+        "password": "123456"},
+        )    
+        assert response.status_code == 201
+
+2. Login
+def test_login(client):    
+    response = client.post(
+        "/auth/login/", 
+        {"email": "a@test.com",        
+        "password": "123456"},
+        )    
+        assert "access" in response.data
+
+3. Session created
+assert UserSession.objects.count() == 1
+
+4. Refresh token
+client.post("/auth/refresh/", {"refresh": token})
+
+5. Logout
+client.post("/auth/logout/", {"refresh": token})
+Assert:
+session.is_active == False
+
+6. Permissions
+Test:
+normal user cannot access others
+admin can access all
+
+✅ C. Edge Cases (important)
+Test these specifically:
+    Invalid token
+    Expired session
+    Missing profile
+    Double logout
+    No groups exist
+
+🧠 Final Verdict
+🔥 What you did very well:
+    Clean architecture
+    Proper JWT session handling
+    Good separation of concerns
+    Real-world permission system
+
+
+
+⚠️ What needs attention:
+Serializer bug (critical)
+Safer validation
+Small consistency fixes
+
+
+
+If you want next step, I can:
+Refactor this into a production-grade service layer
+Or show how to scale this for microservices / multi-tenant systems
+

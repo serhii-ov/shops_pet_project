@@ -1,0 +1,40 @@
+from guardian.shortcuts import get_perms
+from rest_framework import permissions
+
+
+def can_view_user(user, obj):
+    if user.is_superuser:
+        return True
+
+    return (
+        user.has_perm("users.view_user") or
+        "view_user" in get_perms(user, obj)
+    )
+
+
+def can_edit_user(user, obj):
+    if user.is_superuser:
+        return True
+
+    return (
+        user.has_perm("users.change_user") or
+        "change_user" in get_perms(user, obj)
+    )
+
+class UserPermission(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return can_view_user(request.user, obj)
+
+        if request.method in ["PUT", "PATCH"]:
+            return can_edit_user(request.user, obj)
+
+        if request.method == "DELETE":
+            # "delete_user" in get_perms(user, obj)
+            return request.user.has_perm("users.delete_user")
+
+        return False

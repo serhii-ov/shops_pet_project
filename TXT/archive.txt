@@ -1,0 +1,92 @@
+# class IsAdmin(BasePermission):
+#     def has_permission(self, request, view):
+#         return request.user.is_authenticated and request.user.groups.filter(name="Admin").exists()
+
+
+# class IsStaffOrAdmin(BasePermission):
+#     def has_permission(self, request, view):
+#         return request.user.is_authenticated and request.user.groups.filter(
+#             name__in=["Staff", "Admin"]
+#         ).exists()
+
+
+# class IsOwnerOrAdmin(BasePermission):
+#     def has_permission(self, request, view):
+#         return request.user.is_authenticated
+
+#     def has_object_permission(self, request, view, obj):
+#         return obj == request.user or request.user.groups.filter(name="Admin").exists()
+
+===========================================================================
+
+from guardian.shortcuts import get_objects_for_user, assign_perm
+
+class UserViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+        #     if self.action == "create":
+        #         return [permissions.AllowAny()]
+
+        #     if self.action == "list":
+        #         return [IsStaffOrAdmin()]
+
+        #     if self.action == "retrieve":
+        #         return [IsOwnerOrAdmin()]
+
+        #     if self.action in ["update", "partial_update"]:
+        #         return [IsOwnerOrAdmin()]
+
+        #     if self.action == "destroy":
+        #         return [IsAdmin()]
+
+        #     return [permissions.IsAuthenticated()]
+
+    # def get_queryset(self):
+    #     user = self.request.user
+
+    #     if user.groups.filter(name="Admin").exists():
+    #         return User.objects.all()
+
+    #     if user.groups.filter(name="Staff").exists():
+    #         return User.objects.exclude(is_superuser=True)
+
+    #     return User.objects.filter(id=user.id)
+
+=================================================================
+class User(AbstractUser):
+    # class Role(models.TextChoices):
+    #     ADMIN = "admin", "Admin"
+    #     STAFF = "staff", "Staff"
+    #     CUSTOMER = "customer", "Customer"
+
+    username = None
+    email = models.EmailField(unique=True)
+
+    # role = models.CharField(
+    #     max_length=10,
+    #     choices=Role.choices,
+    #     default=Role.CUSTOMER
+    # )
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+
+==============================================================
+1. get_user_model()
+What it returns: The actual User model class.
+When to use: Use this in Views, Forms, Serializers, or any logic that runs after the application has fully started (runtime).
+Why: It gives you direct access to the model's methods and manager (e.g., User.objects.create_user()).
+Caution: Avoid using this at the top level of a models.py file, as it can trigger circular import errors if the User model hasn't been fully loaded yet. 
+Stack Overflow
+Stack Overflow
+ 
+2. settings.AUTH_USER_MODEL
+What it returns: A string representing the model path (e.g., 'auth.User' or 'myapp.CustomUser').
+When to use: Use this exclusively in models.py when defining relationships like ForeignKey, OneToOneField, or ManyToManyField.
+Why: Passing a string allows Django to lazily load the relationship. This prevents circular dependencies during the initialization of your models.
+Signals: You should also use this string reference when connecting to Django signals (e.g., post_save.connect(receiver, sender=settings.AUTH_USER_MODEL)). 
+Django documentation
+Django documentation
+ 
