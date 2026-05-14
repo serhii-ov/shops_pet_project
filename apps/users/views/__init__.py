@@ -1,8 +1,8 @@
-from .user import UserViewSet, MeView
-from .auth import (
+from .user_views import UserViewSet, MeView
+from .auth_views import (
     LoginView, RefreshView, LogoutView, LogoutAllView, 
     )
-from .session import SessionListView, RevokeSessionView
+from .session_views import SessionListView, RevokeSessionView
 
 
 __all__ = [

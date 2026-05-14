@@ -26,8 +26,16 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'django_filters',
+    'drf_spectacular',
 
     'apps.users.apps.UsersConfig',
+    'apps.shops.apps.ShopsConfig',
+    'apps.shop_products.apps.ShopProductsConfig',
+    'apps.categories.apps.CategoriesConfig',
+    'apps.products.apps.ProductsConfig',
+    # 'apps.carts.apps.CartsConfig',
+    # 'apps.orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +130,26 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer", 
-    ]
+    ],
+    "DEFAULT_PERMISSION_CLASSES": (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Shop API',
+    'DESCRIPTION': 'DRF Shop API with JWT Authentication',
+    'VERSION': '1.0.0',
 }
 
 from datetime import timedelta

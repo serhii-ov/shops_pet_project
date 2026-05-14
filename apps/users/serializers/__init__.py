@@ -1,11 +1,11 @@
-from .user import (
+from .user_serializer import (
     UserSerializer, 
     AdminUserSerializer,
     )
-from .auth import (
+from .auth_serializer import (
     CustomTokenObtainPairSerializer,
     )
-from .session import SessionSerializer
+from .session_serializer import SessionSerializer
 
 
 __all__ = [

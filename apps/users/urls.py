@@ -13,7 +13,7 @@ from .views import (
     )
 
 router = DefaultRouter()
-router.register("users", UserViewSet, basename="users")
+router.register("", UserViewSet, basename="users")
 
 urlpatterns = [
     path("auth/login/", LoginView.as_view(), name="login"),

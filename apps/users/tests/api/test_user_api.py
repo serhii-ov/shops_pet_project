@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.django_db
 def test_create_user(api_client):
-    response = api_client.post("/users/users/", {
+    response = api_client.post("/users/", {
         "email": "new@test.com",
         "password": "strongpass123",
         "first_name": "New",
@@ -27,7 +27,7 @@ def test_me_endpoint(auth_client):
 def test_update_user(auth_client):
     client, user = auth_client
 
-    response = client.patch(f"/users/users/{user.id}/", {
+    response = client.patch(f"/users/{user.id}/", {
         "first_name": "Updated"
     })
 
@@ -39,7 +39,7 @@ def test_update_user(auth_client):
 def test_update_profile(auth_client):
     client, user = auth_client
 
-    response = client.patch(f"/users/users/{user.id}/", {
+    response = client.patch(f"/users/{user.id}/", {
         "profile": {
             "phone": "123456"
         }
@@ -86,6 +86,6 @@ def test_admin_can_access_all(api_client, create_user):
         HTTP_AUTHORIZATION=f"Bearer {login.data['access']}"
     )
 
-    response = api_client.get(f"/users/users/{user.id}/")
+    response = api_client.get(f"/users/{user.id}/")
 
     assert response.status_code == 200
