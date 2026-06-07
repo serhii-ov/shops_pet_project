@@ -11,7 +11,13 @@ class UserService:
 
     @staticmethod
     @transaction.atomic
-    def create_user(*, email, password, first_name="", last_name="", profile_data=None):
+    def create_user(*, 
+                    email, 
+                    password, 
+                    first_name="", 
+                    last_name="", 
+                    profile_data=None
+                    ):
         user = User.objects.create_user(
             email=email,
             password=password,
@@ -24,29 +30,6 @@ class UserService:
         )
         return user
 
-    # @staticmethod
-    # @transaction.atomic
-    # def create_user(
-    #     *, email, 
-    #     password, 
-    #     first_name="", 
-    #     last_name="", 
-    #     profile_data=None
-    #     ):
-    #     user = User.objects.create_user(
-    #         email=email,
-    #         password=password,
-    #         first_name=first_name,
-    #         last_name=last_name,
-    #     )
-
-    #     if profile_data:
-    #         Profile.objects.update_or_create(
-    #             user=user,
-    #             defaults=profile_data
-    #         )
-
-    #     return user
 
     @staticmethod
     @transaction.atomic

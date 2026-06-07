@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'drf_spectacular',
+    'djmoney',
 
     'apps.users.apps.UsersConfig',
     'apps.shops.apps.ShopsConfig',
@@ -35,7 +36,7 @@ INSTALLED_APPS = [
     'apps.categories.apps.CategoriesConfig',
     'apps.products.apps.ProductsConfig',
     'apps.carts.apps.CartsConfig',
-    # 'apps.orders.apps.OrdersConfig',
+    'apps.orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [

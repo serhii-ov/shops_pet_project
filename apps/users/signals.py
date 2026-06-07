@@ -21,7 +21,6 @@ def setup_roles(sender, **kwargs):
         group, _ = Group.objects.get_or_create(name=name)
         groups[name] = group
 
-    # Assign permissions
     groups["Admin"].permissions.set(Permission.objects.all())
 
     groups["Staff"].permissions.set(
@@ -34,10 +33,3 @@ def setup_roles(sender, **kwargs):
     groups["Customer"].permissions.set(
         Permission.objects.filter(codename="view_user")
     )
-
-
-# @receiver(post_save, sender=User)
-# from .models import Profile
-# def create_profile(sender, instance, created, **kwargs):
-#     if created and hasattr(instance, "email"):
-#         Profile.objects.get_or_create(user=instance)

@@ -1,74 +1,96 @@
 from decimal import Decimal
-
 from django.db import transaction
+from django.db.models import F
+from django.core.exceptions import ValidationError
 
-from rest_framework.exceptions import ValidationError
+from apps.orders.models import (
+    Order,
+    OrderItem,
+)
+from apps.shop_products.models import ShopProduct
 
-from apps.orders.models import Order, OrderItem
-from apps.carts.models import CartItem
 
+def recalculate_order_totals(order):
+    items = order.items.all()
+
+    order.total_price = sum(
+        (item.total_price for item in items),
+        Decimal("0.00"),
+    )
+
+    order.total_items = sum(
+        item.quantity for item in items
+    )
+
+    order.save(
+        update_fields=[
+            "total_price",
+            "total_items",
+            "total",
+        ]
+    )
 
 class OrderService:
 
     @staticmethod
     @transaction.atomic
-    def create_order(user):
-
-        cart_items = CartItem.objects.select_related(
-            'shop_product',
-            'shop_product__product',
-        ).filter(
-            cart__user=user
+    def create_order_from_cart(
+        *,
+        cart,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+    ):
+        cart_items = list(
+            cart.items.select_related("shop_product")
         )
-
-        if not cart_items.exists():
-            raise ValidationError('Cart is empty.')
-
+        if not cart_items:
+            raise ValidationError("Cannot create order from empty cart.")
+        
         order = Order.objects.create(
-            user=user
+            user=cart.user,
+            shop=cart.shop,
+
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            customer_address=customer_address,
         )
 
-        total_price = Decimal('0.00')
+        order_items = []
 
-        for cart_item in cart_items:
+        for cart_item in cart.items.select_related(
+            "shop_product"
+        ):
+            order_items.append(
+                OrderItem(
+                    order=order,
+                    shop_product=cart_item.shop_product,
+                    quantity=cart_item.quantity,
+                    product_name=cart_item.product_name,
+                    price=cart_item.price,
+                )
+            )
 
+            # reduce stock
             shop_product = cart_item.shop_product
-
-            if not shop_product.is_available:
-                raise ValidationError(
-                    f'{shop_product.product.name} is unavailable.'
-                )
-
-            if cart_item.quantity > shop_product.stock:
-                raise ValidationError(
-                    f'Not enough stock for '
-                    f'{shop_product.product.name}.'
-                )
-
-            OrderItem.objects.create(
-                order=order,
-                shop_product=shop_product,
-                quantity=cart_item.quantity,
-                price=shop_product.price,
+       
+            updated = ShopProduct.objects.filter(
+                pk=shop_product.pk,
+                stock__gte=cart_item.quantity,
+            ).update(
+                stock=F("stock") - cart_item.quantity
             )
 
-            shop_product.stock -= cart_item.quantity
+            if not updated:
+                raise ValidationError("Insufficient stock")
+            
+        OrderItem.objects.bulk_create(order_items)
+        recalculate_order_totals(order)
 
-            if shop_product.stock <= 0:
-                shop_product.stock = 0
-                shop_product.is_available = False
-
-            shop_product.save()
-
-            total_price += (
-                shop_product.price * cart_item.quantity
-            )
-
-        order.total_price = total_price
-        order.status = Order.COMPLETED
-        order.save()
-
-        cart_items.delete()
+        # deactivate cart
+        cart.is_active = False
+        cart.save(update_fields=["is_active"])
 
         return order
-    

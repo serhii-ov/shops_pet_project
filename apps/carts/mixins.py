@@ -1,4 +1,3 @@
-from apps.carts.models.cart_model import Cart
 from apps.carts.services.cart_service import CartService
 
 

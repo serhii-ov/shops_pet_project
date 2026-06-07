@@ -97,3 +97,4 @@ class CartItemDeleteView(
         CartService.remove_item(
             cart_item=instance,
         )
+.0

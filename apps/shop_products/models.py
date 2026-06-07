@@ -1,4 +1,9 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+
+from djmoney.models.fields import MoneyField
+
 from apps.shops.models import Shop
 
 
@@ -14,8 +19,12 @@ class ShopProduct(models.Model):
         on_delete=models.CASCADE,
         related_name='product_shops'
     )
-
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = MoneyField(
+        max_digits=14, 
+        decimal_places=2, 
+        default_currency='USD',
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
 
