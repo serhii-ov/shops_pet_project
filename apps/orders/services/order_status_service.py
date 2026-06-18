@@ -1,8 +1,10 @@
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db.models import F
 
 from apps.orders.models import Order
+from apps.shop_products.models import ShopProduct
 
 
 class OrderStatusService:
@@ -148,40 +150,35 @@ class OrderStatusService:
         reason: str,
     ) -> Order:
 
-        if order.status == (
-            Order.Status.COMPLETED
-        ):
+        if order.status == Order.Status.COMPLETED:
             raise ValidationError(
                 "Completed order cannot be cancelled."
             )
 
-        if order.status == (
-            Order.Status.CANCELLED
-        ):
+        if order.status == Order.Status.CANCELLED:
             raise ValidationError(
                 "Order is already cancelled."
             )
 
         order.status = Order.Status.CANCELLED
-
         order.cancellation_reason = reason
+        order.cancelled_at = timezone.now()
 
-        # restore stock
-        for item in order.items.select_related(
-            "shop_product"
+        for item in order.items.only(
+            "shop_product_id",
+            "quantity",
         ):
-            if item.shop_product:
-                item.shop_product.stock += (
-                    item.quantity
-                )
-                item.shop_product.save(
-                    update_fields=["stock"]
-                )
+            ShopProduct.objects.filter(
+                pk=item.shop_product_id
+            ).update(
+                stock=F("stock") + item.quantity
+            )
 
         order.save(
             update_fields=[
                 "status",
                 "cancellation_reason",
+                "cancelled_at",
                 "updated_at",
             ]
         )

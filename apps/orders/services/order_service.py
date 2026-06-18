@@ -22,13 +22,8 @@ def recalculate_order_totals(order):
         item.quantity for item in items
     )
 
-    order.save(
-        update_fields=[
-            "total_price",
-            "total_items",
-            "total",
-        ]
-    )
+    order.save()
+
 
 class OrderService:
 
@@ -60,9 +55,7 @@ class OrderService:
 
         order_items = []
 
-        for cart_item in cart.items.select_related(
-            "shop_product"
-        ):
+        for cart_item in cart_items:
             order_items.append(
                 OrderItem(
                     order=order,
@@ -74,15 +67,13 @@ class OrderService:
             )
 
             # reduce stock
-            shop_product = cart_item.shop_product
-       
             updated = ShopProduct.objects.filter(
-                pk=shop_product.pk,
+                pk=cart_item.shop_product.pk,
                 stock__gte=cart_item.quantity,
             ).update(
                 stock=F("stock") - cart_item.quantity
             )
-
+           
             if not updated:
                 raise ValidationError("Insufficient stock")
             

@@ -76,7 +76,6 @@ class Order(models.Model):
     payment_provider_id = models.CharField(
         max_length=255,
         blank=True,
-        null=True,
     )
     shipment_status = models.CharField(
         max_length=20,
@@ -123,6 +122,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
+    
     payment_method = models.CharField(
         max_length=20,
         choices=PaymentMethod.choices,
@@ -137,38 +137,39 @@ class Order(models.Model):
     total_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        default=0,
-        validators=[MinValueValidator("0")],
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(0)],
     )
     total_items = models.PositiveIntegerField(
         default=0,
-        validators=[MinValueValidator("0")],
+        validators=[MinValueValidator(0)],
     )
 
     shipping_cost = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
-        validators=[MinValueValidator("0")],
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(0)],
     )
     tax_amount = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
-        validators=[MinValueValidator("0")],
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(0)],
     )
     discount_amount = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
-        validators=[MinValueValidator("0")],
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(0)],
     )
     
     # Final Total (Calculated at checkout)
     total = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        validators=[MinValueValidator("0")],
+        validators=[MinValueValidator(0)],
+        default=Decimal("0.00")
     )
 
     class Meta:
@@ -182,6 +183,22 @@ class Order(models.Model):
             models.CheckConstraint(
                 condition=models.Q(total_items__gte=0),
                 name="order_total_items_gte_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(total__gte=0),
+                name="order_total_gte_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(shipping_cost__gte=0),
+                name="order_shipping_cost_gte_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(tax_amount__gte=0),
+                name="order_tax_amount_gte_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(discount_amount__gte=0),
+                name="order_discount_amount_gte_zero",
             ),
         ]
 
@@ -234,6 +251,13 @@ class Order(models.Model):
             raise ValidationError(
                 "Cancelled orders require a reason."
             )
+        if (
+            self.status == self.Status.PAID
+            and self.payment_status != self.PaymentStatus.PAID
+        ):
+            raise ValidationError(
+                "Paid orders must have paid payment status."
+            )
 
     def save(self, *args, **kwargs):
         if not self.order_number:
@@ -249,16 +273,3 @@ class Order(models.Model):
         
         self.full_clean()
         super().save(*args, **kwargs)
-
-     # @property
-    # def total_price(self):
-    #     return sum(
-    #         (item.total_price for item in self.items.all()),
-    #         Decimal("0.00"),
-    #     )
-
-    # @property
-    # def total_items(self):
-    #     return sum(
-    #         item.quantity for item in self.items.all()
-    #     )

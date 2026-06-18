@@ -56,7 +56,7 @@ class OrderItem(models.Model):
                 name="unique_product_per_order",
             ),
             models.CheckConstraint(
-            condition=models.Q(quantity__gte=0),
+            condition=models.Q(quantity__gte=1),
             name="orderitem_quantity_gt_zero",
             ),
             models.CheckConstraint(

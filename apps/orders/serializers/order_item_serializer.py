@@ -16,12 +16,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
         fields = [
             "id",
+            "shop_product",
             "product_name",
             "price",
             "quantity",
             "total_price",
         ]
         read_only_fields = [
+            "id",
             "product_name",
             "price",
             "total_price",
